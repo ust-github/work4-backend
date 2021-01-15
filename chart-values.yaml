@@ -1,0 +1,14 @@
+image:
+  repository: artifactory.dagility.com/docker/work4-backend
+  tag: latest
+  pullPolicy: Always
+ingress:
+  enabled: true
+  annotations:
+    kubernetes.io/ingress.class: nginx-internal
+  hosts:
+  - host: work4-backend-monitoring.dagility.com
+    paths:
+    - /
+serviceAccount:
+  create: false

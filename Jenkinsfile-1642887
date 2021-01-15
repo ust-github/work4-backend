@@ -1,0 +1,47 @@
+pipeline {
+  agent any
+  tools {
+    maven 'maven'
+  }
+  options {
+    buildDiscarder logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '5')
+    disableConcurrentBuilds()
+  }
+  stages {
+    stage ('Build (phkbzp)') {
+      steps {
+        sh script: 'mvn clean ', label: 'dwtu5j'
+        sh script: 'mvn test ', label: 'of2xe4'
+        sh script: 'mvn install -Dmaven.test.skip=true', label: 'rs0v11'
+      } //end steps
+    } // end stage Build
+    stage ('Deploy (udkjn6)') {
+      steps {
+        script {
+		docker.withTool('docker'){
+			docker.withRegistry('https://artifactory.dagility.com', ''){
+				sh 'docker build -t artifactory.dagility.com/docker/work4-backend:latest .'
+			sh 'docker push artifactory.dagility.com/docker/work4-backend:latest'
+			}
+		}
+	}
+	script { sh script: 'sleep 0.005', label: 'fmw4o7'}
+
+        sh script: '''
+ln -sf /usr/local/bin/helm3 /usr/local/bin/helm
+''', label: 'gr88gx'
+        sh script: 'helm package chart', label: 'ijhrf0'
+        withCredentials([   usernamePassword(credentialsId: '', passwordVariable: 'PASS', usernameVariable: 'USER')]) {
+   	script {
+		sh "curl -u$USER:$PASS -T work4-backend-chart-0.1.0.tgz 'https://artifactory.dagility.com/artifactory/helm-local/work4-backend-chart-0.1.0.tgz' "
+	}
+	script { sh script: 'sleep 0.005', label: '4j2evm'}
+
+}
+        sh script: 'helm repo add work4-backend https://artifactory.dagility.com/artifactory/helm', label: 'rvsu01'
+        sh script: 'helm repo update', label: 'mesfnb'
+        sh script: 'helm upgrade work4-backend-deployment work4-backend/work4-backend-chart --install --values chart-values.yaml --namespace monitoring', label: 'ixxrui'
+      } //end steps
+    } // end stage Deploy
+  }
+}
